@@ -1,0 +1,6 @@
+{
+  "appId": "com.ios18.launcher",
+  "appName": "iOS 18 Launcher Pro",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
