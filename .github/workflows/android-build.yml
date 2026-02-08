@@ -1,0 +1,45 @@
+name: Build Android Launcher
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Create Missing Files
+        run: |
+          # Agar index.html missing hai toh ye use bana dega
+          echo '<!DOCTYPE html><html><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Launcher</title></head><body><div id="root"></div><script type="module" src="/index.tsx"></script></body></html>' > index.html
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Web App
+        run: npm run build
+
+      - name: Setup Capacitor & Android
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npx cap add android
+          npx cap sync android
+
+      - name: Inject Launcher Role
+        run: |
+          # Ye command Android ko batayegi ki ye Home Screen hai
+          sed -i '/<category android:name="android.intent.category.LAUNCHER" \/>/a <category android:name="android.intent.category.HOME" \/>\n<category android:name="android.intent.category.DEFAULT" \/>' android/app/src/main/AndroidManifest.xml
+
+      - name: Build APK
+        run: |
+          cd android && ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: iOS-Launcher-Pro-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
